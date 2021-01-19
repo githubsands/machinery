@@ -1,6 +1,6 @@
 package machinery
 
-// Machine defines the common order of operations of using a machine
+// Machine defines the common order of operations when using a machine
 // i.e Notify(), Register(), Run(), WaitForExit(), WaitForGroup are ran from first
 // to last
 type Machine interface {
