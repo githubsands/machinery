@@ -6,20 +6,15 @@ import (
 	"os/signal"
 	"sync"
 
-	"github.com/githubsands/investmentmanager/machinery/chat"
-	"github.com/githubsands/investmentmanager/machinery/observability"
+	"github.com/githubsands/machinery/listeners"
+	"github.com/githubsands/machinery/listeners/chat"
+	"github.com/githubsands/machinery/listeners/observability"
 )
-
-// listeners defines what can be registered with machinery
-// TODO: make this abide to as many different listeners as possible i.e grpc or http servers
-type listener interface {
-	Run()
-}
 
 // Machinery represents the core machinery of this process. It registers other listeners, controls them, and waits for signals for shutdown
 type Machinery struct {
-	logger    *log.Logger // TODO: this should be an interface so user can pick their prefered loggger
-	listeners []listener  // TODO: build this out
+	logger    *log.Logger          // TODO: this should be an interface so user can pick their prefered loggger
+	listeners []listeners.Listener // TODO: build this out
 
 	wg       *sync.WaitGroup
 	shutdown chan struct{}
@@ -40,7 +35,7 @@ func NewMachinery(l *log.Logger) (*Machinery, chan struct{}) {
 
 		done:      done,
 		signals:   make(chan os.Signal, 10),
-		listeners: make([]listener, 0),
+		listeners: make([]listeners.Listener, 0),
 	}
 
 	m.addListeners()
@@ -58,7 +53,7 @@ func (m *Machinery) Notify() {
 	signal.Notify(m.signals, os.Kill, os.Interrupt)
 }
 
-func (m *Machinery) Register(s listener) {
+func (m *Machinery) Register(s listeners.Listener) {
 	m.listeners = append(m.listeners, s)
 }
 
