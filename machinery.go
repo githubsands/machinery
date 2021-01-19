@@ -6,8 +6,8 @@ import (
 	"os/signal"
 	"sync"
 
-	"github.com/githubsands/machinery/chat"
-	"github.com/githubsands/machinery/observability"
+	"github.com/githubsands/investmentmanager/machinery/chat"
+	"github.com/githubsands/investmentmanager/machinery/observability"
 )
 
 // listeners defines what can be registered with machinery
@@ -58,6 +58,10 @@ func (m *Machinery) Notify() {
 	signal.Notify(m.signals, os.Kill, os.Interrupt)
 }
 
+func (m *Machinery) Register(s listener) {
+	m.listeners = append(m.listeners, s)
+}
+
 // Run runs all registered listeners
 func (m *Machinery) Run() {
 	for _, v := range m.listeners {
@@ -68,10 +72,6 @@ func (m *Machinery) Run() {
 
 func (m *Machinery) off() {
 	m.on = true
-}
-
-func (m *Machinery) Register(s listener) {
-	m.listeners = append(m.listeners, s)
 }
 
 // WaitForExit runs in a loop until the conditional is met (1) OS signals are received, (2) the done chan receives a signal
