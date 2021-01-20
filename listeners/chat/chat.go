@@ -8,10 +8,12 @@ import (
 
 var TOKEN = "XXXXXX"
 
+type DiscordMessageHandler func(*discordgo.Session, *discordgo.MessageCreate)
+
 // NewChat creates a new chat given discord message handlers.
 // The user of the machinery package is responsible for creating their own discord messages
-func NewChat(f ...func(*discordgo.Session, *discordgo.MessageCreate)) *Chat {
-	if f == nil {
+func NewChat(fs []func(*discordgo.Session, *discordgo.MessageCreate)) *Chat {
+	if len(fs) == 0 {
 		panic("")
 	}
 
@@ -27,8 +29,7 @@ func NewChat(f ...func(*discordgo.Session, *discordgo.MessageCreate)) *Chat {
 		panic("")
 	}
 
-	var mhs = make([]func(*discordgo.Session, *discordgo.MessageCreate), 0)
-	for _, v := range mhs {
+	for _, v := range fs {
 		dg.AddHandler(v)
 	}
 
@@ -59,23 +60,5 @@ func (c *Chat) Run() {
 	if err != nil {
 		fmt.Println("error opening connection,", err)
 		panic("")
-	}
-}
-
-func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-
-	// Ignore all messages created by the bot itself
-	// This isn't required in this specific example but it's a good practice.
-	if m.Author.ID == s.State.User.ID {
-		return
-	}
-	// If the message is "ping" reply with "Pong!"
-	if m.Content == "ping" {
-		s.ChannelMessageSend(m.ChannelID, "Pong!")
-	}
-
-	// If the message is "pong" reply with "Ping!"
-	if m.Content == "pong" {
-		s.ChannelMessageSend(m.ChannelID, "Ping!")
 	}
 }
