@@ -8,15 +8,29 @@ import (
 
 var TOKEN = "XXXXXX"
 
-func NewChat() *Chat {
+// NewChat creates a new chat given discord message handlers.
+// The user of the machinery package is responsible for creating their own discord messages
+func NewChat(f ...func(*discordgo.Session, *discordgo.MessageCreate)) *Chat {
+	if f == nil {
+		panic("")
+	}
+
 	dg, err := discordgo.New("Bot " + TOKEN)
 	if err != nil {
 		panic("")
 		fmt.Println("error creating Discord session,", err)
 	}
+	// Open a websocket connection to Discord and begin listening.
+	err = dg.Open()
+	if err != nil {
+		fmt.Println("error opening connection,", err)
+		panic("")
+	}
 
-	// Register the messageCreate func as a callback for MessageCreate events.
-	dg.AddHandler(messageCreate)
+	var mhs = make([]func(*discordgo.Session, *discordgo.MessageCreate), 0)
+	for _, v := range mhs {
+		dg.AddHandler(v)
+	}
 
 	// In this example, we only care about receiving message events.
 	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessages)
