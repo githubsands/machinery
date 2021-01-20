@@ -12,7 +12,7 @@ type DiscordMessageHandler func(*discordgo.Session, *discordgo.MessageCreate)
 
 // NewChat creates a new chat given discord message handlers.
 // The user of the machinery package is responsible for creating their own discord messages
-func NewChat(fs []func(*discordgo.Session, *discordgo.MessageCreate)) *Chat {
+func NewChat(fs []func(*discordgo.Session, *discordgo.Config, *discordgo.MessageCreate)) *Chat {
 	if len(fs) == 0 {
 		panic("")
 	}
@@ -32,9 +32,6 @@ func NewChat(fs []func(*discordgo.Session, *discordgo.MessageCreate)) *Chat {
 	for _, v := range fs {
 		dg.AddHandler(v)
 	}
-
-	// In this example, we only care about receiving message events.
-	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessages)
 
 	// Open a websocket connection to Discord and begin listening.
 	err = dg.Open()
