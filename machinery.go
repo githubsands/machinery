@@ -9,6 +9,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/githubsands/machinery/listeners"
 	"github.com/githubsands/machinery/listeners/chat"
+	"github.com/githubsands/machinery/listeners/grpc"
 	"github.com/githubsands/machinery/listeners/observability"
 )
 
@@ -27,7 +28,7 @@ type Machinery struct {
 	// observer observer
 }
 
-func NewMachinery(l *log.Logger, f []func(*discordgo.Session, *discordgo.MessageCreate)) (*Machinery, chan struct{}) {
+func NewMachinery(l *log.Logger, gss []*grpc.GRPCServer, f []func(*discordgo.Session, *discordgo.MessageCreate)) (*Machinery, chan struct{}) {
 	done := make(chan struct{})
 
 	m := &Machinery{wg: &sync.WaitGroup{},
@@ -39,15 +40,25 @@ func NewMachinery(l *log.Logger, f []func(*discordgo.Session, *discordgo.Message
 		listeners: make([]listeners.Listener, 0),
 	}
 
-	m.addListeners(f)
+	m.addListeners(gss, f)
 	return m, done
 }
 
-func (m *Machinery) addListeners(f []func(*discordgo.Session, *discordgo.MessageCreate)) {
-	observer := observability.NewObserver()
-	chat := chat.NewChat(f)
+func (m *Machinery) addListeners(gs []*grpc.GRPCServer, f []func(*discordgo.Session, *discordgo.MessageCreate)) {
+	if f != nil {
+		chat := chat.NewChat(f)
+		m.listeners = append(m.listeners, chat)
+	}
 
-	m.listeners = append(m.listeners, observer, chat)
+	observer := observability.NewObserver()
+
+	if len(gs) > 0 {
+		for _, v := range gs {
+			m.listeners = append(m.listeners, v)
+		}
+	}
+
+	m.listeners = append(m.listeners, observer)
 }
 
 func (m *Machinery) Notify() {
