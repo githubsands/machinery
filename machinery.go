@@ -52,7 +52,7 @@ func (m *Machinery) addListeners(gs []*grpc.GRPCServer, f []func(*discordgo.Sess
 
 	observer := observability.NewObserver()
 
-	if len(gs) > 0 {
+	if len(gs) > 0 && gs != nil {
 		for _, v := range gs {
 			m.listeners = append(m.listeners, v)
 		}
