@@ -8,6 +8,12 @@ import (
 	"google.golang.org/grpc"
 )
 
+// interceptStreaming is used when needing a polling, i.e notifications, listening for events, and sending data followed by deltas
+type interceptStreaming func(interface{}, grpc.ServerStream, *grpc.StreamServerInfo, grpc.StreamHandler) error
+
+// inteceptUnary is generally used when expecting to send a single event back
+type interceptUnary func(context.Context, interface{}, *grpc.UnaryServerInfo, grpc.UnaryHandler) (interface{}, error)
+
 type GRPCServer struct {
 	name    string // Name of the service
 	server  *grpc.Server
