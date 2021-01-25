@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net"
 
+	"github.com/githubsands/machinery/listeners/chat"
 	"google.golang.org/grpc"
 )
 
@@ -19,6 +20,8 @@ type GRPCServer struct {
 	server  *grpc.Server
 	network string
 	address string
+
+	chats chan<- chat.ChatMsg
 }
 
 func NewGRPCServer(interceptStreaming func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error, interceptUnary func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error)) (*GRPCServer, error) {
@@ -59,4 +62,8 @@ func (grpc *GRPCServer) Run() {
 	}
 
 	grpc.server.Serve(l)
+}
+
+func (grpc *GRPCServer) AddChat(chats chan<- chat.ChatMsg) {
+	grpc.chats = chats
 }

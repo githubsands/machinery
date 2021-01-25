@@ -25,7 +25,7 @@ type Machinery struct {
 	signals chan os.Signal
 	on      bool // represents the state of the machine. if turned off machine is in the process of shutting down
 
-	// observer observer
+	chatMsgs chan chat.ChatMsg
 }
 
 func NewMachinery(l *log.Logger, gss []*grpc.GRPCServer, f []func(*discordgo.Session, *discordgo.MessageCreate)) (*Machinery, chan struct{}) {
@@ -46,14 +46,16 @@ func NewMachinery(l *log.Logger, gss []*grpc.GRPCServer, f []func(*discordgo.Ses
 
 func (m *Machinery) addListeners(gs []*grpc.GRPCServer, f []func(*discordgo.Session, *discordgo.MessageCreate)) {
 	if f != nil {
-		chat := chat.NewChat(f)
+		chat, chatMsgs := chat.NewChat(f)
 		m.listeners = append(m.listeners, chat)
+		m.chatMsgs = chatMsgs
 	}
 
 	observer := observability.NewObserver()
 
 	if len(gs) > 0 && gs != nil {
 		for _, v := range gs {
+			m.registerWithChat(v)
 			m.listeners = append(m.listeners, v)
 		}
 	}
@@ -65,8 +67,13 @@ func (m *Machinery) Notify() {
 	signal.Notify(m.signals, os.Kill, os.Interrupt)
 }
 
-func (m *Machinery) Register(s listeners.Listener) {
-	m.listeners = append(m.listeners, s)
+func (m *Machinery) registerWithChat(s listeners.ListenerWithChat) {
+	if m.chatMsgs != nil {
+		lc := listeners.ListenerWithChat(s)
+		lc.AddChat(m.chatMsgs)
+	}
+
+	return
 }
 
 // Run runs all registered listeners

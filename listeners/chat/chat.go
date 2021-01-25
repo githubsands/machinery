@@ -12,7 +12,7 @@ type DiscordMessageHandler func(*discordgo.Session, *discordgo.MessageCreate)
 
 // NewChat creates a new chat given discord message handlers.
 // The user of the machinery package is responsible for creating their own discord messages
-func NewChat(fs []func(*discordgo.Session, *discordgo.MessageCreate)) (*Chat, chan<- ChatMsg) {
+func NewChat(fs []func(*discordgo.Session, *discordgo.MessageCreate)) (*Chat, chan ChatMsg) {
 	if len(fs) == 0 {
 		panic("")
 	}
