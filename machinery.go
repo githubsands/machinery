@@ -65,6 +65,10 @@ func (m *Machinery) addListeners(gs []*grpc.GRPCServer, f []func(*discordgo.Sess
 	m.listeners = append(m.listeners, observer)
 }
 
+func (m *Machinery) SendChatMsg(c chat.ChatMsg) {
+	m.chatMsgs <- c
+}
+
 func (m *Machinery) Notify() {
 	signal.Notify(m.signals, os.Kill, os.Interrupt)
 }
