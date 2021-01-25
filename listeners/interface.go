@@ -7,6 +7,7 @@ import "github.com/githubsands/machinery/listeners/chat"
 
 type ListenerWithChat interface {
 	AddChat(chan<- chat.ChatMsg)
+	SendToChat(chat.ChatMsg)
 
 	Listener
 }

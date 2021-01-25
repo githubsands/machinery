@@ -67,3 +67,7 @@ func (grpc *GRPCServer) Run() {
 func (grpc *GRPCServer) AddChat(chats chan<- chat.ChatMsg) {
 	grpc.chats = chats
 }
+
+func (grpc *GRPCServer) SendToChat(msg chat.ChatMsg) {
+	grpc.chats <- msg
+}
