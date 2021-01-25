@@ -35,8 +35,10 @@ func NewMachinery(l *log.Logger, gss []*grpc.GRPCServer, f []func(*discordgo.Ses
 		logger:   l,
 		shutdown: make(chan (struct{})),
 
-		done:      done,
-		signals:   make(chan os.Signal, 10),
+		on:      true,
+		done:    done,
+		signals: make(chan os.Signal, 10),
+
 		listeners: make([]listeners.Listener, 0),
 	}
 
@@ -84,20 +86,16 @@ func (m *Machinery) Run() {
 	}
 }
 
-func (m *Machinery) off() {
-	m.on = true
-}
-
 // WaitForExit runs in a loop until the conditional is met (1) OS signals are received, (2) the done chan receives a signal
 func (m *Machinery) WaitForExit() {
-	for exit := false; !exit; {
+	for m.on = false; !m.on; {
 		select {
 		case s := <-m.signals:
 			m.logger.Printf("Signaled received, %v, exiting the application", s)
-			m.off()
+			m.on = false
 		case <-m.done:
 			m.logger.Printf("Done channel received exiting the application")
-			m.off()
+			m.on = false
 		}
 	}
 }
