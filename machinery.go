@@ -9,6 +9,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/githubsands/machinery/listeners"
 	"github.com/githubsands/machinery/listeners/chat"
+	"github.com/githubsands/machinery/listeners/debug"
 	"github.com/githubsands/machinery/listeners/grpc"
 	"github.com/githubsands/machinery/listeners/observability"
 )
@@ -28,7 +29,7 @@ type Machinery struct {
 	chatMsgs chan chat.ChatMsg
 }
 
-func NewMachinery(l *log.Logger, gss []*grpc.GRPCServer, f []func(*discordgo.Session, *discordgo.MessageCreate)) (*Machinery, chan struct{}) {
+func NewMachinery(cfg Config, l *log.Logger, gss []*grpc.GRPCServer, f []func(*discordgo.Session, *discordgo.MessageCreate)) (*Machinery, chan struct{}) {
 	done := make(chan struct{})
 
 	m := &Machinery{wg: &sync.WaitGroup{},
@@ -42,17 +43,18 @@ func NewMachinery(l *log.Logger, gss []*grpc.GRPCServer, f []func(*discordgo.Ses
 		listeners: make([]listeners.Listener, 0),
 	}
 
-	m.addListeners(gss, f)
+	m.addListeners(cfg, gss, f)
 	return m, done
 }
 
-func (m *Machinery) addListeners(gs []*grpc.GRPCServer, f []func(*discordgo.Session, *discordgo.MessageCreate)) {
+func (m *Machinery) addListeners(cfg Config, gs []*grpc.GRPCServer, f []func(*discordgo.Session, *discordgo.MessageCreate)) {
 	if f != nil {
-		chat, chatMsgs := chat.NewChat(f)
+		chat, chatMsgs := chat.NewChat(f, cfg.ChatHost)
 		m.listeners = append(m.listeners, chat)
 		m.chatMsgs = chatMsgs
 	}
 
+	debug := debug.NewDebug()
 	observer := observability.NewObserver()
 
 	if len(gs) > 0 && gs != nil {
@@ -62,7 +64,7 @@ func (m *Machinery) addListeners(gs []*grpc.GRPCServer, f []func(*discordgo.Sess
 		}
 	}
 
-	m.listeners = append(m.listeners, observer)
+	m.listeners = append(m.listeners, debug, observer)
 }
 
 func (m *Machinery) SendChatMsg(c chat.ChatMsg) {
